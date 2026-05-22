@@ -5,7 +5,7 @@
 # JDK 17 Compatible
 # ----------------------------------------
 
-TOMCAT_VERSION="10.1.28"
+TOMCAT_VERSION="10.1.41"
 
 echo "Installing Java 17..."
 yum install java-17-amazon-corretto -y
@@ -18,7 +18,12 @@ echo "Downloading Apache Tomcat..."
 
 cd /opt || exit
 
-wget https://downloads.apache.org/tomcat/tomcat-10/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz
+wget https://dlcdn.apache.org/tomcat/tomcat-10/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz
+
+if [ $? -ne 0 ]; then
+    echo "Tomcat download failed"
+    exit 1
+fi
 
 echo "Extracting Tomcat..."
 
@@ -37,11 +42,7 @@ echo "Changing Tomcat Port from 8080 to 9090..."
 
 sed -i 's/port=\"8080\"/port=\"9090\"/g' /opt/tomcat/conf/server.xml
 
-echo "Starting Tomcat..."
-
-/opt/tomcat/bin/startup.sh
-
-echo "Enabling Tomcat Auto Start..."
+echo "Creating Tomcat Service..."
 
 cat <<EOF >/etc/systemd/system/tomcat.service
 [Unit]
@@ -62,6 +63,12 @@ EOF
 systemctl daemon-reload
 systemctl enable tomcat
 systemctl start tomcat
+
+sleep 10
+
+echo "Checking Tomcat Status..."
+
+systemctl status tomcat --no-pager
 
 echo "----------------------------------------"
 echo "Tomcat Installation Completed"
