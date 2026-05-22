@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# ----------------------------------------
+# Apache Tomcat Installation Script
+# JDK 17 Compatible
+# ----------------------------------------
+
+TOMCAT_VERSION="10.1.28"
+
+echo "Installing Java 17..."
+yum install java-17-amazon-corretto -y
+
+echo "Creating admin user..."
+useradd admin
+echo "admin:admin" | chpasswd
+
+echo "Downloading Tomcat..."
+
+cd /opt || exit
+
+wget https://downloads.apache.org/tomcat/tomcat-10/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz
+
+echo "Extracting Tomcat..."
+
+tar -xvzf apache-tomcat-${TOMCAT_VERSION}.tar.gz
+
+mv apache-tomcat-${TOMCAT_VERSION} tomcat
+
+chmod -R 755 /opt/tomcat
+
+echo "Updating Tomcat manager access..."
+
+sed -i '21s/<!--//' /opt/tomcat/webapps/manager/META-INF/context.xml
+sed -i '22s/-->//' /opt/tomcat/webapps/manager/META-INF/context.xml
+
+echo "Changing Tomcat port from 8080 to 9090..."
+
+sed -i 's/port=\"8080\"/port=\"9090\"/g' /opt/tomcat/conf/server.xml
+
+echo "Starting Tomcat..."
+
+/opt/tomcat/bin/startup.sh
+
+echo "Tomcat Started Successfully"
+
+echo "Access URL:"
+echo "http://<SERVER-IP>:9090"
